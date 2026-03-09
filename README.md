@@ -21,7 +21,7 @@ A web-based Applicant Tracking System that allows organizations to post job vaca
 
 1. Clone repository
 
-git clone https://github.com/yourusername/ats-system.git
+git clone https://github.com/Liillo/ATS.git
 
 2. Install dependencies
 
