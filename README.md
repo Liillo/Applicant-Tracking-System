@@ -1,57 +1,39 @@
 # Applicant Tracking System (ATS)
 
 ## Description
-The Applicant Tracking System (ATS) is a web-based recruitment platform designed to streamline the hiring process. The system allows organizations to post job vacancies, receive applications from candidates, and manage applicant information in one centralized platform.
-
-It helps recruiters track applicants efficiently, store resumes, and manage the recruitment workflow from job posting to candidate selection.
-
----
+A web-based Applicant Tracking System that allows organizations to post job vacancies, receive applications, and manage applicants through a centralized recruitment platform.
 
 ## Features
-- Job posting and management
+- Job posting management
 - Online job applications
-- Resume/CV upload system
+- Resume upload system
 - Applicant tracking
 - Admin dashboard
-- Job listing page for candidates
 
----
-
-## Technologies Used
-- PHP
-- MySQL
-- HTML
-- CSS
+## Technologies
+- Node.js
 - JavaScript
-- Apache Server
-- Version Control: Git
-
----
+- Prisma ORM
+- SQL Database
+- HTML, CSS
 
 ## Installation
 
-1. Clone the repository
+1. Clone repository
 
 git clone https://github.com/yourusername/ats-system.git
 
-2. Move the project to your server directory (example using WAMP)
+2. Install dependencies
 
-C:\wamp64\www\ats-system
+npm install
 
-3. Import the database into MySQL.
+3. Configure environment variables
 
-4. Start Apache and MySQL.
+Create a .env file.
 
-5. Open the project in your browser
+4. Run the project
 
-http://localhost/ats-system
-
----
+npm run dev
 
 ## Author
 Lilian Kazuri
-
----
-
-## License
-MIT License
