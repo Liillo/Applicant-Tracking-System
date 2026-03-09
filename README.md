@@ -22,7 +22,7 @@ This specific ATS was designed with HRMPEB in mind.
 
 1. Clone repository
 
-git clone https://github.com/Liillo/ATS.git
+git clone https://github.com/Liillo/Applicant-Tracking-System.git
 
 2. Install dependencies
 
