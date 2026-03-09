@@ -1,0 +1,664 @@
+﻿/**
+ * HRMPEB ATS â€” Applicant Dashboard  (API version)
+ * All db.js calls replaced with real API calls.
+ */
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { api } from '../../utils/api';
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
+import { Badge } from '../../components/UI';
+import toast from 'react-hot-toast';
+
+// â”€â”€â”€ Status config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const STATUS_CFG = {
+  'Submitted':           { color:'#6b7280', bg:'#f3f4f6',  icon:'📬', step:1 },
+  'Under Review':        { color:'#d97706', bg:'#fffbea',  icon:'🔍', step:2 },
+  'Shortlisted':         { color:'#059669', bg:'#ecfdf5',  icon:'⭐', step:3 },
+  'Interview Scheduled': { color:'#1F3C88', bg:'#eff6ff',  icon:'📅', step:4 },
+  'Interviewed':         { color:'#7c3aed', bg:'#f5f3ff',  icon:'🎙️', step:5 },
+  'Offer Extended':      { color:'#ca8a04', bg:'#fef9c3',  icon:'📄', step:6 },
+  'Hired':               { color:'#15803d', bg:'#dcfce7',  icon:'🎉', step:7 },
+  'Rejected':            { color:'#dc2626', bg:'#fee2e2',  icon:'❌', step:0 },
+  'Withdrawn':           { color:'#9ca3af', bg:'#f3f4f6',  icon:'↩️', step:0 },
+};
+
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function timeAgo(iso) {
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (diff < 60)    return 'just now';
+  if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  if (diff < 604800)return `${Math.floor(diff/86400)}d ago`;
+  return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short'});
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});
+}
+
+// â”€â”€â”€ Profile Completeness â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function calcCompletion(profile, appCount) {
+  const checks = [
+    { label:'First & last name',    done: !!(profile?.firstName && profile?.lastName) },
+    { label:'Phone number',         done: !!profile?.phone },
+    { label:'City & country',       done: !!(profile?.city && profile?.country) },
+    { label:'Professional summary', done: !!(profile?.professionalSummary?.trim()) },
+    { label:'LinkedIn URL',         done: !!profile?.linkedinUrl },
+    { label:'Applied for a job',    done: appCount > 0 },
+  ];
+  const pct = Math.round((checks.filter(c => c.done).length / checks.length) * 100);
+  return { checks, pct };
+}
+
+const PROFILE_MATCH_STOP_WORDS = new Set([
+  'the', 'and', 'for', 'with', 'from', 'that', 'this', 'you', 'your', 'are', 'was', 'were', 'have',
+  'has', 'had', 'into', 'onto', 'over', 'under', 'our', 'their', 'they', 'them', 'his', 'her', 'its',
+  'job', 'work', 'role', 'team', 'using', 'used', 'use', 'years', 'year', 'skills', 'skill',
+]);
+
+function tokenizeProfileText(text) {
+  if (!text) return [];
+  return String(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(token => token.length > 2 && !PROFILE_MATCH_STOP_WORDS.has(token));
+}
+
+function rankJobsByProfile(jobs, profile) {
+  if (!Array.isArray(jobs) || jobs.length === 0) return [];
+
+  const profileText = [
+    profile?.professionalSummary,
+    profile?.city,
+    profile?.country,
+  ].filter(Boolean).join(' ');
+  const profileTokens = new Set(tokenizeProfileText(profileText));
+  const city = profile?.city?.toLowerCase();
+  const country = profile?.country?.toLowerCase();
+
+  return jobs
+    .map((job, index) => {
+      const jobText = [
+        job.title,
+        job.description,
+        job.requirements,
+        job.skillsRequired,
+        job.responsibilities,
+        job.department?.name,
+        job.location,
+        job.jobType,
+        job.experienceLevel,
+      ].filter(Boolean).join(' ');
+
+      const jobTokens = new Set(tokenizeProfileText(jobText));
+      let score = 0;
+
+      for (const token of profileTokens) {
+        if (jobTokens.has(token)) score += 2;
+      }
+
+      const jobLocation = String(job.location || '').toLowerCase();
+      if (city && jobLocation.includes(city)) score += 5;
+      if (country && jobLocation.includes(country)) score += 3;
+
+      return { job, score, index };
+    })
+    .sort((a, b) => (b.score - a.score) || (a.index - b.index))
+    .map(entry => entry.job);
+}
+
+// â”€â”€â”€ Stat Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function StatCard({ icon, label, value, color, bg, delay=0 }) {
+  return (
+    <div style={{ background:'#fff', borderRadius:16, padding:'20px 22px', boxShadow:'var(--shadow-md)', border:'1px solid var(--clr-border-soft)', animation:`fadeIn 0.4s ease ${delay}s both`, display:'flex', alignItems:'center', gap:16 }}>
+      <div style={{ width:50,height:50,borderRadius:14,background:bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0 }}>{icon}</div>
+      <div>
+        <div style={{ fontFamily:'var(--font-display)',fontSize:30,fontWeight:800,color,lineHeight:1 }}>{value}</div>
+        <div style={{ fontSize:13,fontWeight:600,color:'var(--clr-text-soft)',marginTop:3 }}>{label}</div>
+      </div>
+    </div>
+  );
+}
+
+// â”€â”€â”€ Application Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function ApplicationRow({ appData, onWithdraw }) {
+  const { app, job, interviews } = appData;
+  const [expanded, setExpanded]  = useState(false);
+  const cfg = STATUS_CFG[app.status] || STATUS_CFG['Submitted'];
+  const nextInterview = interviews?.find(i => i.outcome === 'Pending');
+
+  const deptName = job?.department?.name || '—';
+
+  return (
+    <div style={{ background:'#fff', borderRadius:16, border:'1px solid var(--clr-border-soft)', overflow:'hidden', marginBottom:12, boxShadow:'var(--shadow-sm)' }}>
+      {/* Main row */}
+      <div onClick={() => setExpanded(e => !e)}
+        style={{ padding:'18px 22px', cursor:'pointer', display:'flex', alignItems:'center', gap:16 }}>
+        <div style={{ width:44,height:44,borderRadius:12,background:'var(--clr-primary-pale)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0 }}>💼</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontFamily:'var(--font-display)',fontWeight:700,fontSize:15,color:'var(--clr-primary)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>
+            {job?.title || '(Job removed)'}
+          </div>
+          <div style={{ fontSize:12,color:'var(--clr-muted)',marginTop:2 }}>
+            {job ? `${deptName} · ${job.location}` : '—'}
+          </div>
+        </div>
+        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0 }}>
+          <span style={{ fontSize:16 }}>{cfg.icon}</span>
+          <span style={{ background:cfg.bg,color:cfg.color,padding:'4px 12px',borderRadius:'var(--radius-full)',fontSize:12,fontWeight:700,whiteSpace:'nowrap' }}>{app.status}</span>
+        </div>
+        <div style={{ fontSize:12,color:'var(--clr-muted)',flexShrink:0,minWidth:70,textAlign:'right' }}>{timeAgo(app.createdAt)}</div>
+        <div style={{ fontSize:12,color:'var(--clr-muted)',transition:'transform 0.2s',transform:expanded?'rotate(180deg)':'none',flexShrink:0 }}>▾</div>
+      </div>
+
+      {/* Progress pipeline */}
+      {cfg.step > 0 && (
+        <div style={{ padding:'0 22px 14px', display:'flex', alignItems:'center', gap:0 }}>
+          {['Submitted','Under Review','Shortlisted','Interview','Offer','Hired'].map((s,i) => {
+            const done   = cfg.step > i+1;
+            const active = cfg.step === i+1;
+            return (
+              <React.Fragment key={s}>
+                <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:3 }}>
+                  <div style={{ width:20,height:20,borderRadius:'50%',background:done?'var(--clr-green)':active?'var(--clr-primary)':'var(--clr-border)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,color:'#fff',fontWeight:800,flexShrink:0 }}>
+                    {done?'✓':i+1}
+                  </div>
+                  <span style={{ fontSize:9,fontWeight:600,color:active?'var(--clr-primary)':done?'var(--clr-green)':'var(--clr-muted)',whiteSpace:'nowrap' }}>{s}</span>
+                </div>
+                {i<5 && <div style={{ flex:1,height:2,background:done?'var(--clr-green)':'var(--clr-border)',margin:'0 3px',marginBottom:14,minWidth:8 }} />}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div style={{ padding:'16px 22px 20px', borderTop:'1px solid var(--clr-border-soft)', animation:'fadeIn 0.25s ease' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14, marginBottom:16 }}>
+            <div style={{ background:'var(--clr-bg)',borderRadius:10,padding:14 }}>
+              <div style={{ fontSize:11,fontWeight:700,color:'var(--clr-muted)',textTransform:'uppercase',letterSpacing:0.7,marginBottom:4 }}>Applied</div>
+              <div style={{ fontSize:13,fontWeight:600,color:'var(--clr-text)' }}>{formatDate(app.createdAt)}</div>
+            </div>
+            <div style={{ background:'var(--clr-bg)',borderRadius:10,padding:14 }}>
+              <div style={{ fontSize:11,fontWeight:700,color:'var(--clr-muted)',textTransform:'uppercase',letterSpacing:0.7,marginBottom:4 }}>Expected Salary</div>
+              <div style={{ fontSize:13,fontWeight:600,color:'var(--clr-text)' }}>
+                {app.expectedSalary ? `KES ${Number(app.expectedSalary).toLocaleString()}/mo` : '—'}
+              </div>
+            </div>
+            <div style={{ background:'var(--clr-bg)',borderRadius:10,padding:14 }}>
+              <div style={{ fontSize:11,fontWeight:700,color:'var(--clr-muted)',textTransform:'uppercase',letterSpacing:0.7,marginBottom:4 }}>Available From</div>
+              <div style={{ fontSize:13,fontWeight:600,color:'var(--clr-text)' }}>{formatDate(app.availableStartDate)}</div>
+            </div>
+          </div>
+
+          {/* Interview alert */}
+          {nextInterview && (
+            <div style={{ background:'var(--clr-primary-pale)',border:'1px solid rgba(31,60,136,0.15)',borderRadius:12,padding:14,marginBottom:14,display:'flex',alignItems:'center',gap:12 }}>
+              <span style={{ fontSize:22 }}>📅</span>
+              <div>
+                <div style={{ fontWeight:700,fontSize:13,color:'var(--clr-primary)' }}>Interview Scheduled</div>
+                <div style={{ fontSize:13,color:'var(--clr-text-soft)',marginTop:2 }}>
+                  {nextInterview.interviewType} · {formatDate(nextInterview.scheduledDate)}
+                  {nextInterview.meetingLink && (
+                    <> · <a href={nextInterview.meetingLink} target="_blank" rel="noreferrer" style={{ color:'var(--clr-primary)',fontWeight:700 }}>Join Meeting →</a></>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Cover letter preview */}
+          {app.coverLetter && (
+            <div style={{ background:'var(--clr-bg)',borderRadius:10,padding:14,marginBottom:14 }}>
+              <div style={{ fontSize:11,fontWeight:700,color:'var(--clr-muted)',textTransform:'uppercase',letterSpacing:0.7,marginBottom:6 }}>Cover Letter</div>
+              <p style={{ fontSize:13,color:'var(--clr-text-soft)',lineHeight:1.65,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden',margin:0 }}>
+                {app.coverLetter}
+              </p>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display:'flex',gap:10,justifyContent:'flex-end' }}>
+            {job && (
+              <Link to={`/jobs/${job.id}`} style={{ padding:'8px 18px',borderRadius:8,background:'var(--clr-primary-pale)',color:'var(--clr-primary)',fontSize:13,fontWeight:700 }}>
+                View Job
+              </Link>
+            )}
+            {!['Withdrawn','Hired','Rejected'].includes(app.status) && (
+              <button onClick={() => onWithdraw(app.id)}
+                style={{ padding:'8px 18px',borderRadius:8,background:'var(--clr-red-pale)',color:'var(--clr-red)',fontSize:13,fontWeight:700,border:'none',cursor:'pointer',fontFamily:'inherit' }}>
+                Withdraw
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// â”€â”€â”€ Recommended Job Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function RecommendedJobCard({ job, deptName, appCount }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link to={`/jobs/${job.id}`}
+      style={{ display:'block',textDecoration:'none',background:'#fff',borderRadius:14,padding:18,border:`1.5px solid ${hovered?'var(--clr-primary)':'var(--clr-border-soft)'}`,boxShadow:hovered?'var(--shadow-md)':'var(--shadow-sm)',transform:hovered?'translateY(-2px)':'none',transition:'all 0.2s' }}
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10 }}>
+        <div style={{ width:38,height:38,borderRadius:10,background:'var(--clr-primary-pale)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18 }}>💼</div>
+        <Badge label={job.jobType} size="xs" />
+      </div>
+      <div style={{ fontFamily:'var(--font-display)',fontWeight:700,fontSize:14,color:'var(--clr-primary)',marginBottom:3,lineHeight:1.3 }}>{job.title}</div>
+      <div style={{ fontSize:12,color:'var(--clr-muted)',marginBottom:10 }}>{deptName} · {job.location}</div>
+      {job.salaryMin && (
+        <div style={{ fontSize:12,fontWeight:600,color:'var(--clr-green)',background:'var(--clr-green-pale)',padding:'3px 10px',borderRadius:'var(--radius-full)',display:'inline-block',marginBottom:10 }}>
+          KES {(job.salaryMin/1000).toFixed(0)}k–{(job.salaryMax/1000).toFixed(0)}k
+        </div>
+      )}
+      <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:10,borderTop:'1px solid var(--clr-border-soft)',fontSize:11,color:'var(--clr-muted)' }}>
+        <span>👥 {appCount} applied</span>
+        <span style={{ color:hovered?'var(--clr-gold)':'var(--clr-primary)',fontWeight:700,fontSize:12,transition:'color 0.2s' }}>Apply →</span>
+      </div>
+    </Link>
+  );
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// APPLICANT DASHBOARD
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+export default function ApplicantDashboard() {
+  const { user, profile, refreshProfile } = useAuth();
+
+  const [applications,  setApplications]  = useState([]);
+  const [recommended,   setRecommended]   = useState([]);
+  const [activeTab,     setActiveTab]     = useState('all');
+  const [searchQuery,   setSearchQuery]   = useState('');
+  const [editProfile,   setEditProfile]   = useState(false);
+  const [profileForm,   setProfileForm]   = useState({});
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [loadingData,   setLoadingData]   = useState(true);
+  const [notifications, setNotifications] = useState([]);
+
+  // â”€â”€ Load data from API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    try {
+      // Fetch my applications (includes job + interviews nested)
+      const apps = await api.myApplications();
+      const shaped = apps.map(app => ({
+        app,
+        job:        app.job       || null,
+        interviews: app.interviews|| [],
+      }));
+      setApplications(shaped);
+
+      // Recommended = open jobs user hasn't applied for, ranked by profile match
+      const appliedJobIds = new Set(apps.map(a => a.jobId));
+      const allJobs = await api.getJobs({ status: 'Open' });
+      const open = rankJobsByProfile(
+        allJobs.filter(j => !appliedJobIds.has(j.id)),
+        profile,
+      )
+        .slice(0, 2)
+        .map(j => ({
+          job:      j,
+          deptName: j.department?.name || '—',
+          appCount: j._count?.applications || 0,
+        }));
+      setRecommended(open);
+
+      const notif = await api.myNotifications();
+      setNotifications(Array.isArray(notif) ? notif : []);
+    } catch (err) {
+      toast.error('Failed to load data');
+    } finally {
+      setLoadingData(false);
+    }
+  }, [profile, user]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  // â”€â”€ Profile form init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  useEffect(() => {
+    if (profile) setProfileForm({ ...profile });
+  }, [profile]);
+
+  // â”€â”€ Filter applications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const filtered = applications.filter(({ app, job }) => {
+    const matchTab =
+      activeTab === 'all' ||
+      (activeTab === 'active'    && !['Withdrawn','Rejected','Hired'].includes(app.status)) ||
+      (activeTab === 'hired'     && app.status === 'Hired') ||
+      (activeTab === 'withdrawn' && ['Withdrawn','Rejected'].includes(app.status));
+    const matchSearch = !searchQuery ||
+      job?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      app.status.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchTab && matchSearch;
+  });
+
+  // â”€â”€ Withdraw â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const handleWithdraw = async (appId) => {
+    if (!window.confirm('Withdraw this application?')) return;
+    try {
+      await api.withdraw(appId);
+      toast.success('Application withdrawn');
+      loadData();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // â”€â”€ Save profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      await api.updateProfile(profileForm);
+      await refreshProfile();
+      setEditProfile(false);
+      toast.success('Profile updated!');
+    } catch (err) {
+      const msg = String(err?.message || '');
+      if (msg.includes('Cannot PATCH /api/auth/profile')) {
+        toast.error('Profile update endpoint not available. Restart hrmpeb-api server.');
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const { checks: completionChecks, pct: completionPct } = calcCompletion(profile, applications.length);
+
+  const stats = {
+    total:      applications.length,
+    active:     applications.filter(a => !['Withdrawn','Rejected','Hired'].includes(a.app.status)).length,
+    interviews: applications.filter(a => ['Interview Scheduled','Interviewed'].includes(a.app.status)).length,
+    hired:      applications.filter(a => a.app.status === 'Hired').length,
+  };
+
+  const TABS = [
+    { id:'all',       label:'All',                  count: applications.length },
+    { id:'active',    label:'Active',               count: stats.active },
+    { id:'hired',     label:'Hired',                count: stats.hired },
+    { id:'withdrawn', label:'Rejected / Withdrawn', count: applications.filter(a => ['Withdrawn','Rejected'].includes(a.app.status)).length },
+  ];
+
+  if (loadingData) return (
+    <div style={{ minHeight:'100vh',display:'flex',flexDirection:'column',background:'var(--clr-bg)' }}>
+      <Navbar />
+      <div style={{ flex:1,display:'flex',alignItems:'center',justifyContent:'center' }}>
+        <div style={{ width:40,height:40,border:'3px solid var(--clr-primary)',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', background:'var(--clr-bg)' }}>
+      <Navbar />
+
+      {/* â”€â”€ Header Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <section style={{ background:'linear-gradient(135deg,var(--clr-primary),var(--clr-primary-dark))', padding:'36px 40px 40px', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute',top:-60,right:-60,width:280,height:280,borderRadius:'50%',background:'rgba(244,180,0,0.06)',pointerEvents:'none' }} />
+        <div style={{ position:'absolute',top:0,left:0,right:0,height:3,background:'linear-gradient(90deg,transparent,var(--clr-gold),transparent)' }} />
+        <div style={{ width:'100%',margin:0 }}>
+          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:16 }}>
+            <div style={{ display:'flex',alignItems:'center',gap:16 }}>
+              <div style={{ width:60,height:60,borderRadius:16,background:'var(--clr-gold)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-display)',fontWeight:800,fontSize:22,color:'var(--clr-primary)',boxShadow:'0 4px 16px rgba(244,180,0,0.35)',flexShrink:0 }}>
+                {(profile?.firstName?.[0]||user?.email?.[0]||'?').toUpperCase()}
+                {(profile?.lastName?.[0]||'').toUpperCase()}
+              </div>
+              <div>
+                <div style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:22,color:'#fff',lineHeight:1.2 }}>
+                  {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : user?.email}
+                </div>
+                <div style={{ color:'rgba(255,255,255,0.6)',fontSize:13,marginTop:3 }}>
+                  {profile?.city ? `${profile.city}, ${profile.country}` : user?.email}
+                </div>
+              </div>
+            </div>
+            <div style={{ display:'flex',gap:10 }}>
+              <button onClick={() => setEditProfile(true)}
+                style={{ padding:'10px 20px',borderRadius:10,background:'rgba(255,255,255,0.12)',border:'1.5px solid rgba(255,255,255,0.25)',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'inherit' }}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.2)'}
+                onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.12)'}>
+                ✏️ Edit Profile
+              </button>
+              <Link to="/jobs" style={{ padding:'10px 20px',borderRadius:10,background:'var(--clr-gold)',color:'var(--clr-primary)',fontWeight:800,fontSize:13,boxShadow:'0 4px 14px rgba(244,180,0,0.35)' }}>
+                Browse Jobs →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div style={{ width:'100%', margin:0, padding:'28px 40px 60px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', gap:24 }}>
+
+          {/* â”€â”€ Left Column â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          <div>
+            {/* Stats */}
+            <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:28 }}>
+              <StatCard icon="📋" label="Total Applications" value={stats.total}      color="var(--clr-primary)" bg="var(--clr-primary-pale)" delay={0}    />
+              <StatCard icon="🔄" label="Active"             value={stats.active}     color="#d97706"            bg="#fffbea"                 delay={0.07} />
+              <StatCard icon="🎙️" label="Interviews"        value={stats.interviews} color="#7c3aed"            bg="#f5f3ff"                 delay={0.14} />
+              <StatCard icon="🎉" label="Hired"              value={stats.hired}      color="var(--clr-green)"   bg="var(--clr-green-pale)"   delay={0.21} />
+            </div>
+
+            {/* Applications panel */}
+            <div style={{ background:'#fff',borderRadius:20,padding:24,boxShadow:'var(--shadow-md)',border:'1px solid var(--clr-border-soft)',marginBottom:24 }}>
+              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:12 }}>
+                <h2 style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:20,color:'var(--clr-primary)',margin:0 }}>My Applications</h2>
+                <div style={{ position:'relative' }}>
+                  <span style={{ position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',fontSize:14,pointerEvents:'none' }}>🔍</span>
+                  <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..."
+                    style={{ padding:'8px 12px 8px 32px',border:'1.5px solid var(--clr-border)',borderRadius:9,fontSize:13,fontFamily:'inherit',color:'var(--clr-text)',background:'var(--clr-bg)',outline:'none',width:180 }}
+                    onFocus={e=>e.target.style.borderColor='var(--clr-primary)'}
+                    onBlur={e=>e.target.style.borderColor='var(--clr-border)'}
+                  />
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div style={{ display:'flex',gap:4,background:'var(--clr-bg)',borderRadius:12,padding:4,marginBottom:20,width:'fit-content' }}>
+                {TABS.map(t => (
+                  <button key={t.id} onClick={() => setActiveTab(t.id)}
+                    style={{ padding:'8px 16px',borderRadius:9,border:'none',fontFamily:'inherit',fontSize:13,fontWeight:600,cursor:'pointer',background:activeTab===t.id?'var(--clr-primary)':'transparent',color:activeTab===t.id?'#fff':'var(--clr-muted)',transition:'all 0.18s',display:'flex',alignItems:'center',gap:6 }}>
+                    {t.label}
+                    <span style={{ background:activeTab===t.id?'rgba(255,255,255,0.2)':'var(--clr-border)',color:activeTab===t.id?'#fff':'var(--clr-muted)',padding:'1px 7px',borderRadius:'var(--radius-full)',fontSize:11,fontWeight:700 }}>{t.count}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* List */}
+              {filtered.length === 0 ? (
+                <div style={{ textAlign:'center',padding:'48px 24px' }}>
+                  <div style={{ fontSize:52,marginBottom:14 }}>📭</div>
+                  <h3 style={{ fontFamily:'var(--font-display)',fontWeight:700,fontSize:18,color:'var(--clr-primary)',marginBottom:8 }}>
+                    {applications.length === 0 ? 'No applications yet' : 'No matching applications'}
+                  </h3>
+                  <p style={{ color:'var(--clr-muted)',fontSize:14,marginBottom:20 }}>
+                    {applications.length === 0 ? 'Browse open positions and hit Apply to get started!' : 'Try a different filter or search term.'}
+                  </p>
+                  <Link to="/jobs" style={{ padding:'10px 24px',borderRadius:10,background:'var(--clr-primary)',color:'#fff',fontWeight:700,fontSize:14 }}>Browse Jobs →</Link>
+                </div>
+              ) : filtered.map(appData => (
+                <ApplicationRow key={appData.app.id} appData={appData} onWithdraw={handleWithdraw} />
+              ))}
+            </div>
+
+            {/* Recommended Jobs */}
+            {recommended.length > 0 && (
+              <div style={{ background:'#fff',borderRadius:20,padding:24,boxShadow:'var(--shadow-md)',border:'1px solid var(--clr-border-soft)' }}>
+                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18 }}>
+                  <h2 style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:18,color:'var(--clr-primary)',margin:0 }}>✨ Recommended for You</h2>
+                  <Link to="/jobs" style={{ fontSize:13,fontWeight:700,color:'var(--clr-primary)' }}>See all →</Link>
+                </div>
+                <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14 }}>
+                  {recommended.map(({ job, deptName, appCount }) => (
+                    <RecommendedJobCard key={job.id} job={job} deptName={deptName} appCount={appCount} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* â”€â”€ Right Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          <div style={{ display:'flex',flexDirection:'column',gap:20 }}>
+
+            {/* Notifications */}
+            <div style={{ background:'#fff',borderRadius:20,padding:22,boxShadow:'var(--shadow-md)',border:'1px solid var(--clr-border-soft)' }}>
+              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14 }}>
+                <div style={{ fontFamily:'var(--font-display)',fontWeight:700,fontSize:15,color:'var(--clr-primary)' }}>Notifications</div>
+                <span style={{ fontSize:11,fontWeight:700,color:'var(--clr-muted)',background:'var(--clr-bg)',padding:'2px 8px',borderRadius:'var(--radius-full)' }}>{notifications.length}</span>
+              </div>
+              {notifications.length === 0 ? (
+                <p style={{ fontSize:12,color:'var(--clr-muted)',margin:0 }}>No new notifications.</p>
+              ) : notifications.slice(0, 6).map(n => (
+                <Link key={n.id} to={n.jobId ? `/jobs/${n.jobId}` : '/jobs'} style={{ display:'block',padding:'10px 0',borderBottom:'1px solid var(--clr-border-soft)' }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:4 }}>
+                    <span style={{ fontSize:13 }}>{n.type === 'status' ? '🔔' : '📝'}</span>
+                    <span style={{ fontSize:12,fontWeight:700,color:'var(--clr-text)',lineHeight:1.3 }}>{n.jobTitle || 'Application'}</span>
+                  </div>
+                  <div style={{ fontSize:12,color:'var(--clr-text-soft)',lineHeight:1.45 }}>
+                    {n.type === 'status' ? `Status changed to ${n.status}. ${n.message || ''}` : n.message}
+                  </div>
+                  <div style={{ fontSize:11,color:'var(--clr-muted)',marginTop:4 }}>{timeAgo(n.createdAt)}</div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Profile strength */}
+            <div style={{ background:'#fff',borderRadius:20,padding:22,boxShadow:'var(--shadow-md)',border:'1px solid var(--clr-border-soft)' }}>
+              <div style={{ fontFamily:'var(--font-display)',fontWeight:700,fontSize:15,color:'var(--clr-primary)',marginBottom:14 }}>Profile Strength</div>
+              <div style={{ display:'flex',alignItems:'center',gap:14,marginBottom:16 }}>
+                <div style={{ position:'relative',width:68,height:68,flexShrink:0 }}>
+                  <svg width="68" height="68" viewBox="0 0 68 68">
+                    <circle cx="34" cy="34" r="28" fill="none" stroke="var(--clr-border-soft)" strokeWidth="7" />
+                    <circle cx="34" cy="34" r="28" fill="none"
+                      stroke={completionPct>=80?'var(--clr-green)':completionPct>=50?'var(--clr-gold)':'var(--clr-primary)'}
+                      strokeWidth="7" strokeLinecap="round"
+                      strokeDasharray={`${completionPct*1.759} 175.9`}
+                      transform="rotate(-90 34 34)"
+                      style={{ transition:'stroke-dasharray 0.6s ease' }}
+                    />
+                    <text x="34" y="39" textAnchor="middle" fontSize="14" fontWeight="800" fontFamily="var(--font-display)"
+                      fill={completionPct>=80?'var(--clr-green)':completionPct>=50?'var(--clr-gold)':'var(--clr-primary)'}>
+                      {completionPct}%
+                    </text>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontWeight:700,fontSize:14,color:'var(--clr-text)' }}>
+                    {completionPct===100?'Complete!':completionPct>=80?'Almost there!':completionPct>=50?'Looking good':'Getting started'}
+                  </div>
+                  <div style={{ fontSize:12,color:'var(--clr-muted)',marginTop:2,lineHeight:1.5 }}>A complete profile gets 3x more views</div>
+                </div>
+              </div>
+              {completionChecks.map(c => (
+                <div key={c.label} style={{ display:'flex',alignItems:'center',gap:9,marginBottom:9 }}>
+                  <div style={{ width:18,height:18,borderRadius:'50%',background:c.done?'var(--clr-green)':'var(--clr-border)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#fff',fontWeight:800,flexShrink:0 }}>
+                    {c.done?'✓':''}
+                  </div>
+                  <span style={{ fontSize:12,color:c.done?'var(--clr-text)':'var(--clr-muted)',fontWeight:c.done?600:400 }}>{c.label}</span>
+                </div>
+              ))}
+              {completionPct < 100 && (
+                <button onClick={() => setEditProfile(true)}
+                  style={{ width:'100%',marginTop:14,padding:'10px',borderRadius:9,background:'var(--clr-primary)',color:'#fff',fontWeight:700,fontSize:13,border:'none',cursor:'pointer',fontFamily:'inherit' }}>
+                  Complete Profile →
+                </button>
+              )}
+            </div>
+
+            {/* Status legend */}
+            <div style={{ background:'#fff',borderRadius:20,padding:22,boxShadow:'var(--shadow-md)',border:'1px solid var(--clr-border-soft)' }}>
+              <div style={{ fontFamily:'var(--font-display)',fontWeight:700,fontSize:15,color:'var(--clr-primary)',marginBottom:14 }}>Application Statuses</div>
+              {Object.entries(STATUS_CFG).map(([status, cfg]) => (
+                <div key={status} style={{ display:'flex',alignItems:'center',gap:9,marginBottom:9 }}>
+                  <span style={{ fontSize:14 }}>{cfg.icon}</span>
+                  <span style={{ fontSize:12,background:cfg.bg,color:cfg.color,padding:'2px 8px',borderRadius:'var(--radius-full)',fontWeight:600 }}>{status}</span>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* â”€â”€ Edit Profile Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {editProfile && (
+        <div onClick={e => e.target===e.currentTarget && setEditProfile(false)}
+          style={{ position:'fixed',inset:0,background:'rgba(15,20,40,0.55)',backdropFilter:'blur(4px)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20 }}>
+          <div style={{ background:'#fff',borderRadius:24,width:'100%',maxWidth:560,maxHeight:'90vh',overflowY:'auto',boxShadow:'var(--shadow-xl)' }}>
+            <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 24px',borderBottom:'1px solid var(--clr-border-soft)' }}>
+              <h3 style={{ fontFamily:'var(--font-display)',fontWeight:700,fontSize:18,color:'var(--clr-primary)',margin:0 }}>Edit Profile</h3>
+              <button onClick={() => setEditProfile(false)}
+                style={{ background:'var(--clr-bg)',border:'none',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:18,color:'var(--clr-muted)',display:'flex',alignItems:'center',justifyContent:'center' }}>×</button>
+            </div>
+            <div style={{ padding:24,display:'flex',flexDirection:'column',gap:14 }}>
+              {[
+                [['firstName','First Name','text'],   ['lastName','Last Name','text']],
+                [['phone','Phone','tel'],              ['dateOfBirth','Date of Birth','date']],
+                [['gender','Gender','text'],           ['nationality','Nationality','text']],
+                [['city','City','text'],               ['country','Country','text']],
+                [['address','Address','text'],         ['postalCode','Postal Code','text']],
+                [['linkedinUrl','LinkedIn URL','url'], ['portfolioUrl','Portfolio URL','url']],
+              ].map((row, ri) => (
+                <div key={ri} style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
+                  {row.map(([key, label, type]) => (
+                    <div key={key}>
+                      <label style={{ display:'block',fontSize:12,fontWeight:600,color:'var(--clr-muted)',marginBottom:5,textTransform:'uppercase',letterSpacing:0.5 }}>{label}</label>
+                      {key === 'gender' ? (
+                        <select value={profileForm[key]||''} onChange={e => setProfileForm(p => ({...p,[key]:e.target.value}))}
+                          style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--clr-border)',borderRadius:9,fontSize:13,fontFamily:'inherit',color:'var(--clr-text)',background:'var(--clr-bg)',outline:'none',boxSizing:'border-box' }}
+                          onFocus={e=>e.target.style.borderColor='var(--clr-primary)'}
+                          onBlur={e=>e.target.style.borderColor='var(--clr-border)'}>
+                          <option value="">Select gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Non-binary">Non-binary</option>
+                          <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                      ) : (
+                        <input type={type} value={profileForm[key]||''} onChange={e => setProfileForm(p => ({...p,[key]:e.target.value}))}
+                          style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--clr-border)',borderRadius:9,fontSize:13,fontFamily:'inherit',color:'var(--clr-text)',background:'var(--clr-bg)',outline:'none',boxSizing:'border-box' }}
+                          onFocus={e=>e.target.style.borderColor='var(--clr-primary)'}
+                          onBlur={e=>e.target.style.borderColor='var(--clr-border)'}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <div>
+                <label style={{ display:'block',fontSize:12,fontWeight:600,color:'var(--clr-muted)',marginBottom:5,textTransform:'uppercase',letterSpacing:0.5 }}>Professional Summary</label>
+                <textarea value={profileForm.professionalSummary||''} onChange={e => setProfileForm(p => ({...p,professionalSummary:e.target.value}))} rows={4}
+                  style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--clr-border)',borderRadius:9,fontSize:13,fontFamily:'inherit',color:'var(--clr-text)',background:'var(--clr-bg)',outline:'none',resize:'vertical',lineHeight:1.6,boxSizing:'border-box' }}
+                />
+              </div>
+              <div style={{ display:'flex',gap:12,justifyContent:'flex-end',paddingTop:8 }}>
+                <button onClick={() => setEditProfile(false)}
+                  style={{ padding:'10px 22px',borderRadius:9,background:'var(--clr-bg)',border:'1.5px solid var(--clr-border)',color:'var(--clr-text)',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit' }}>
+                  Cancel
+                </button>
+                <button onClick={handleSaveProfile} disabled={savingProfile}
+                  style={{ padding:'10px 24px',borderRadius:9,background:'var(--clr-primary)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',gap:8,opacity:savingProfile?0.7:1 }}>
+                  {savingProfile && <span style={{ width:14,height:14,border:'2px solid rgba(255,255,255,0.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin 0.7s linear infinite',display:'inline-block' }} />}
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
+}

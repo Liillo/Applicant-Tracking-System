@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("applicant")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile      ApplicantProfile?
+  applications Application[]
+}
+
+model ApplicantProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  firstName           String?
+  lastName            String?
+  phone               String?
+  dateOfBirth         String?
+  gender              String?
+  nationality         String?
+  address             String?
+  city                String?
+  country             String?
+  postalCode          String?
+  linkedinUrl         String?
+  portfolioUrl        String?
+  professionalSummary String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  jobs Job[]
+}
+
+model Job {
+  id               String   @id @default(cuid())
+  title            String
+  departmentId     String
+  location         String
+  jobType          String
+  experienceLevel  String
+  salaryMin        Float?
+  salaryMax        Float?
+  salaryCurrency   String   @default("KES")
+  salaryPeriod     String   @default("Monthly")
+  description      String
+  responsibilities String?
+  requirements     String?
+  benefits         String?
+  skillsRequired   String?
+  status           String   @default("Open")
+  slots            Int      @default(1)
+  deadline         String?
+  views            Int      @default(0)
+  createdBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  department   Department    @relation(fields: [departmentId], references: [id])
+  applications Application[]
+}
+
+model Application {
+  id                 String   @id @default(cuid())
+  jobId              String
+  applicantId        String
+  status             String   @default("Submitted")
+  coverLetter        String?
+  expectedSalary     String?
+  availableStartDate String?
+  cvFileName         String?
+  cvFilePath         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  job            Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicant      User             @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  workExperiences WorkExperience[]
+  educations      Education[]
+  skills          Skill[]
+  certifications  Certification[]
+  languages       Language[]
+  notes           AppNote[]
+  statusHistory   StatusHistory[]
+  interviews      Interview[]
+
+  @@unique([jobId, applicantId])
+}
+
+model WorkExperience {
+  id             String  @id @default(cuid())
+  applicationId  String
+  company        String
+  position       String
+  location       String?
+  employmentType String?
+  startDate      String?
+  endDate        String?
+  isCurrent      Boolean @default(false)
+  description    String?
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Education {
+  id            String  @id @default(cuid())
+  applicationId String
+  institution   String
+  degree        String?
+  fieldOfStudy  String?
+  startDate     String?
+  endDate       String?
+  gpa           String?
+  honors        String?
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Skill {
+  id               String @id @default(cuid())
+  applicationId    String
+  skillName        String
+  proficiency      String?
+  yearsOfExperience Int?
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Certification {
+  id            String  @id @default(cuid())
+  applicationId String
+  certName      String
+  issuingOrg    String?
+  issueDate     String?
+  expiryDate    String?
+  credentialId  String?
+  credentialUrl String?
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Language {
+  id            String @id @default(cuid())
+  applicationId String
+  language      String
+  proficiency   String?
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model AppNote {
+  id            String   @id @default(cuid())
+  applicationId String
+  adminId       String
+  note          String
+  isPrivate     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model StatusHistory {
+  id            String   @id @default(cuid())
+  applicationId String
+  status        String
+  changedBy     String
+  note          String?
+  createdAt     DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Interview {
+  id              String   @id @default(cuid())
+  applicationId   String
+  scheduledBy     String
+  interviewType   String
+  scheduledDate   String
+  durationMinutes Int      @default(60)
+  meetingLink     String?
+  location        String?
+  notes           String?
+  outcome         String   @default("Pending")
+  createdAt       DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
