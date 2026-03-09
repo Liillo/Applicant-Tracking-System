@@ -70,4 +70,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-app.listen(PORT, () => console.log(`? HRMPEB API running on http://localhost:${PORT}`));
+export { app };
+
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+if (isDirectRun) {
+  app.listen(PORT, () => console.log(`HRMPEB API running on http://localhost:${PORT}`));
+}
