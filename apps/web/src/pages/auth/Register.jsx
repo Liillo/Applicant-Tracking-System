@@ -119,9 +119,9 @@ export default function Register() {
         <div style={{ position:'absolute',top:0,left:0,right:0,height:3,background:'linear-gradient(90deg,transparent,var(--clr-gold),transparent)' }} />
 
         <div style={{ marginBottom:40,animation:'fadeIn 0.5s ease' }}>
-          <Link to="/" style={{ display:'flex',alignItems:'center',gap:12,textDecoration:'none' }}>
-            <div style={{ width:52,height:52,background:'var(--clr-gold)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-display)',fontWeight:800,fontSize:24,color:'var(--clr-primary)' }}>H</div>
-            <span style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:22,color:'#fff',letterSpacing:'-0.5px' }}>HRMPEB <span style={{ color:'var(--clr-gold)' }}>ATS</span></span>
+          <Link to="/" style={{ display:'flex',alignItems:'center',gap:'clamp(10px, 1.8vw, 16px)',textDecoration:'none' }}>
+            <img src="/hrmpeb-logo.png" alt="HRMPEB logo" style={{ width:'clamp(56px, 10vw, 84px)', height:'clamp(56px, 10vw, 84px)', objectFit:'contain', borderRadius:16 }} />
+            <span style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:'clamp(18px, 2.4vw, 24px)',color:'#fff',letterSpacing:'-0.4px',lineHeight:1.1 }}>HRMPEB <span style={{ color:'var(--clr-gold)' }}>ATS</span></span>
           </Link>
         </div>
 
@@ -130,7 +130,7 @@ export default function Register() {
             Join Thousands of<br /><span style={{ color:'var(--clr-gold)' }}>Top Professionals.</span>
           </h2>
           <p style={{ color:'rgba(255,255,255,0.6)',fontSize:15,lineHeight:1.75,marginBottom:36 }}>
-            Create your free account and get matched with the best job opportunities across Kenya in minutes.
+            Create your free account and get matched with the best job opportunities in minutes.
           </p>
           {[
             { icon:'✅', text:'100% free to apply' },

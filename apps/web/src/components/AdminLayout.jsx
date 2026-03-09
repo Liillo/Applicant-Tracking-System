@@ -37,11 +37,11 @@ export default function AdminLayout({ children, title, subtitle }) {
       }}>
         <div style={{ height:3, background:'linear-gradient(90deg,var(--clr-gold),transparent)', flexShrink:0 }} />
 
-        <div style={{ padding: collapsed?'16px 0':'16px 20px', display:'flex', alignItems:'center', gap:10, justifyContent:collapsed?'center':'flex-start', borderBottom:'1px solid rgba(255,255,255,0.08)', flexShrink:0 }}>
-          <div style={{ width:36,height:36,background:'var(--clr-gold)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-display)',fontWeight:800,fontSize:16,color:'var(--clr-primary)',flexShrink:0 }}>H</div>
+        <div style={{ padding: collapsed?'16px 0':'16px clamp(12px, 2vw, 20px)', display:'flex', alignItems:'center', gap:'clamp(8px, 1.6vw, 12px)', justifyContent:collapsed?'center':'flex-start', borderBottom:'1px solid rgba(255,255,255,0.08)', flexShrink:0 }}>
+          <img src="/hrmpeb-logo.png" alt="HRMPEB logo" style={{ width:'clamp(38px, 7vw, 56px)', height:'clamp(38px, 7vw, 56px)', objectFit:'contain', borderRadius:10, flexShrink:0 }} />
           {!collapsed && (
             <div>
-              <div style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:15,color:'#fff',letterSpacing:'-0.3px',lineHeight:1.2 }}>HRMPEB</div>
+              <div style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:'clamp(13px, 1.6vw, 16px)',color:'#fff',letterSpacing:'-0.2px',lineHeight:1.15 }}>HRMPEB</div>
               <div style={{ fontSize:9,color:'rgba(255,255,255,0.4)',fontWeight:700,letterSpacing:1.5,textTransform:'uppercase' }}>Admin Portal</div>
             </div>
           )}

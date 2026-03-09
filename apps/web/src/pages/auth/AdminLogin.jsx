@@ -75,27 +75,14 @@ export default function AdminLogin() {
         <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle,rgba(31,60,136,0.3) 0%,transparent 70%)', pointerEvents: 'none' }} />
 
         <div style={{ marginBottom: 48, animation: 'fadeIn 0.5s ease', position: 'relative' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                background: 'var(--clr-gold)',
-                borderRadius: 14,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 800,
-                fontSize: 24,
-                color: 'var(--clr-primary)',
-                boxShadow: '0 4px 20px rgba(244,180,0,0.4)',
-              }}
-            >
-              H
-            </div>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 1.8vw, 16px)', textDecoration: 'none' }}>
+            <img
+              src="/hrmpeb-logo.png"
+              alt="HRMPEB logo"
+              style={{ width: 'clamp(56px, 10vw, 84px)', height: 'clamp(56px, 10vw, 84px)', objectFit: 'contain', borderRadius: 16, boxShadow: '0 4px 20px rgba(244,180,0,0.4)' }}
+            />
             <div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: '#fff', letterSpacing: '-0.5px' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(17px, 2.2vw, 22px)', color: '#fff', letterSpacing: '-0.4px', lineHeight: 1.1 }}>
                 HRMPEB <span style={{ color: 'var(--clr-gold)' }}>ATS</span>
               </div>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginTop: 1 }}>

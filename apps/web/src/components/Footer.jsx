@@ -29,9 +29,9 @@ export default function Footer() {
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: 48, marginBottom: 48, paddingBottom: 40, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 40, height: 40, background: 'var(--clr-gold)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: 'var(--clr-primary)' }}>H</div>
-              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18, color: '#fff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 1.8vw, 14px)', marginBottom: 16 }}>
+              <img src="/hrmpeb-logo.png" alt="HRMPEB logo" style={{ width: 'clamp(42px, 8vw, 64px)', height: 'clamp(42px, 8vw, 64px)', objectFit: 'contain', borderRadius: 12 }} />
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(16px, 2vw, 22px)', color: '#fff', lineHeight: 1.1 }}>
                 HRMPEB <span style={{ color: 'var(--clr-gold)' }}>ATS</span>
               </span>
             </div>

@@ -21,21 +21,18 @@ function AuthLoading() {
     >
       <div
         style={{
-          width: 48,
-          height: 48,
-          background: 'var(--clr-primary)',
+          width: 'clamp(52px, 12vw, 80px)',
+          height: 'clamp(52px, 12vw, 80px)',
           borderRadius: 12,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontFamily: 'var(--font-display)',
-          fontWeight: 800,
-          fontSize: 22,
-          color: 'var(--clr-gold)',
+          background: 'rgba(255,255,255,0.12)',
+          overflow: 'hidden',
           animation: 'pulse 1.5s ease-in-out infinite',
         }}
       >
-        H
+        <img src="/hrmpeb-logo.png" alt="HRMPEB logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
       </div>
       <p style={{ color: 'var(--clr-muted)', fontSize: 14, fontWeight: 500 }}>
         Loading HRMPEB ATS...

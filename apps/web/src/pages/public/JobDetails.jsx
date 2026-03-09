@@ -45,7 +45,6 @@ export default function JobDetails() {
   const [job,     setJob]     = useState(null);
   const [loading, setLoading] = useState(true);
   const [related, setRelated] = useState([]);
-  const [appCount,setAppCount]= useState(0);
   const [deptName,setDeptName]= useState('');
 
   useEffect(() => {
@@ -55,7 +54,6 @@ export default function JobDetails() {
         if (!j) { navigate('/jobs'); return; }
         setJob(j);
         setDeptName(j.department?.name || '—');
-        setAppCount(j._count?.applications || 0);
         // Related jobs: fetch open jobs same department
         try {
           const allOpen = await api.getJobs({ status: 'Open', departmentId: j.departmentId });
@@ -135,7 +133,6 @@ export default function JobDetails() {
             {/* Quick stats card */}
             <div style={{ background:'rgba(255,255,255,0.1)', backdropFilter:'blur(16px)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:16, padding:'20px 24px', minWidth:200, flexShrink:0 }}>
               {[
-                { label:'Applicants', value:`${appCount} applied` },
                 { label:'Openings',   value:`${job.slots} slot${job.slots>1?'s':''}` },
                 { label:'Deadline',   value: job.deadline ? new Date(job.deadline).toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'}) : 'Open' },
                 { label:'Views',      value:`${job.views} views` },
@@ -292,3 +289,5 @@ export default function JobDetails() {
     </div>
   );
 }
+
+

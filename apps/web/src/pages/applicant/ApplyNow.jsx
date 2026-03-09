@@ -807,9 +807,9 @@ export default function ApplyNow() {
 
       {/* Top nav strip */}
       <div style={{ background:'var(--clr-primary)',padding:'0 40px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
-        <Link to="/" style={{ display:'flex',alignItems:'center',gap:10,textDecoration:'none' }}>
-          <div style={{ width:34,height:34,background:'var(--clr-gold)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-display)',fontWeight:800,fontSize:16,color:'var(--clr-primary)' }}>H</div>
-          <span style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:17,color:'#fff' }}>HRMPEB <span style={{ color:'var(--clr-gold)' }}>ATS</span></span>
+        <Link to="/" style={{ display:'flex',alignItems:'center',gap:'clamp(8px, 1.6vw, 14px)',textDecoration:'none' }}>
+          <img src="/hrmpeb-logo.png" alt="HRMPEB logo" style={{ width:'clamp(36px, 7vw, 56px)', height:'clamp(36px, 7vw, 56px)', objectFit:'contain', borderRadius:10 }} />
+          <span style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:'clamp(14px, 2vw, 18px)',color:'#fff',lineHeight:1.1 }}>HRMPEB <span style={{ color:'var(--clr-gold)' }}>ATS</span></span>
         </Link>
         <div style={{ display:'flex',alignItems:'center',gap:8 }}>
           <span style={{ fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.5)',textTransform:'uppercase',letterSpacing:0.8 }}>Applying for</span>

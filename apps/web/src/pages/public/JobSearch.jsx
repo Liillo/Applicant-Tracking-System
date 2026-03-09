@@ -11,7 +11,7 @@ import { api } from '../../utils/api';
 const TYPES  = ['Full-Time','Part-Time','Contract','Internship','Remote','Hybrid'];
 const LEVELS = ['Entry','Junior','Mid','Senior','Executive'];
 
-function JobCard({ job, deptName, appCount }) {
+function JobCard({ job, deptName }) {
   const [hovered, setHovered] = useState(false);
   return (
     <Link to={`/jobs/${job.id}`} style={{ display:'block', textDecoration:'none', background:'#fff', borderRadius:'var(--radius-lg)', padding:22, border:`1.5px solid ${hovered?'var(--clr-primary)':'var(--clr-border-soft)'}`, boxShadow: hovered?'var(--shadow-md)':'var(--shadow-sm)', transition:'all 0.2s', marginBottom:14 }}
@@ -37,7 +37,6 @@ function JobCard({ job, deptName, appCount }) {
         <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8, flexShrink:0 }}>
           <Badge label={job.status} dot />
           <div style={{ fontSize:11, color:'var(--clr-muted)', textAlign:'right' }}>
-            <div>👥 {appCount} applied</div>
             {job.deadline && <div style={{ marginTop:3 }}>📅 {new Date(job.deadline).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}</div>}
           </div>
           {job.slots > 1 && <div style={{ fontSize:11, color:'var(--clr-muted)' }}>🪑 {job.slots} slots</div>}
@@ -80,7 +79,6 @@ export default function JobSearch() {
         setJobs(results.map(j => ({
           job:      j,
           deptName: j.department?.name || '—',
-          appCount: j._count?.applications || 0,
         })));
       } catch(err) { /* silent */ }
     };
@@ -177,7 +175,7 @@ export default function JobSearch() {
                 action={<button onClick={clearFilters} style={{ background:'var(--clr-primary)', color:'#fff', border:'none', padding:'10px 24px', borderRadius:'var(--radius-md)', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Clear Filters</button>} />
             </div>
           ) : (
-            <div>{jobs.map(({job,deptName,appCount})=><JobCard key={job.id} job={job} deptName={deptName} appCount={appCount} />)}</div>
+            <div>{jobs.map(({job,deptName})=><JobCard key={job.id} job={job} deptName={deptName} />)}</div>
           )}
         </div>
       </div>
@@ -186,3 +184,4 @@ export default function JobSearch() {
     </div>
   );
 }
+

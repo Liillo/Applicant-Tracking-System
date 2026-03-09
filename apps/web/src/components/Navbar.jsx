@@ -47,14 +47,13 @@ export default function Navbar() {
     }}>
 
       {/* Logo */}
-      <Link to="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none', flexShrink:0, marginRight: 32 }}>
-        <div style={{
-          width:38, height:38, background:'var(--clr-gold)', borderRadius:10,
-          display:'flex', alignItems:'center', justifyContent:'center',
-          fontFamily:'var(--font-display)', fontWeight:800, fontSize:18,
-          color:'var(--clr-primary)', boxShadow:'0 2px 10px rgba(244,180,0,0.4)',
-        }}>H</div>
-        <span style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:19, color:'#fff', letterSpacing:'-0.5px' }}>
+      <Link to="/" style={{ display:'flex', alignItems:'center', gap:'clamp(8px, 1.6vw, 14px)', textDecoration:'none', flexShrink:0, marginRight: 'clamp(16px, 3vw, 32px)' }}>
+        <img
+          src="/hrmpeb-logo.png"
+          alt="HRMPEB logo"
+          style={{ width:'clamp(38px, 6vw, 54px)', height:'clamp(38px, 6vw, 54px)', objectFit:'contain', borderRadius:12, boxShadow:'0 2px 10px rgba(244,180,0,0.35)' }}
+        />
+        <span style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:'clamp(15px, 2vw, 19px)', color:'#fff', letterSpacing:'-0.4px', lineHeight:1.1 }}>
           HRMPEB <span style={{ color:'var(--clr-gold)' }}>ATS</span>
         </span>
       </Link>

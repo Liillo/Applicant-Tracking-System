@@ -37,7 +37,7 @@ function AnimatedStat({ value, suffix = '', label, started }) {
   );
 }
 
-function JobCard({ job, deptName, appCount, index }) {
+function JobCard({ job, deptName, index }) {
   const [hovered, setHovered] = useState(false);
   return (
     <Link to={`/jobs/${job.id}`} style={{
@@ -64,7 +64,6 @@ function JobCard({ job, deptName, appCount, index }) {
         {job.salaryMin && <Badge label={`KES ${(job.salaryMin/1000).toFixed(0)}k–${(job.salaryMax/1000).toFixed(0)}k`} size="xs" bg="var(--clr-green-pale)" color="var(--clr-green)" />}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, borderTop: '1px solid var(--clr-border-soft)', fontSize: 12, color: 'var(--clr-muted)' }}>
-        <span>👥 {appCount} applicant{appCount !== 1 ? 's' : ''}</span>
         {job.deadline && <span>📅 {new Date(job.deadline).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</span>}
         <span style={{ color: hovered ? 'var(--clr-gold)' : 'var(--clr-primary)', fontWeight: 700, fontSize: 13, transition: 'color 0.2s' }}>Apply →</span>
       </div>
@@ -101,7 +100,6 @@ export default function Home() {
         setFeaturedJobs(open.map(j => ({
           job: j,
           deptName: j.department?.name || '-',
-          appCount: j._count?.applications || 0,
         })));
       } catch {
         setFeaturedJobs([]);
@@ -286,7 +284,7 @@ export default function Home() {
                   </>
                 )}
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20 }}>
-                  {(featuredSlides[featuredSlide] || []).map(({job,deptName,appCount},i)=><JobCard key={job.id} job={job} deptName={deptName} appCount={appCount} index={i} />)}
+                  {(featuredSlides[featuredSlide] || []).map(({job,deptName},i)=><JobCard key={job.id} job={job} deptName={deptName} index={i} />)}
                 </div>
               </div>
               {featuredSlides.length > 1 && (
@@ -346,3 +344,5 @@ export default function Home() {
     </div>
   );
 }
+
+
