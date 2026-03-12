@@ -207,33 +207,33 @@ function Step1({ data, onChange, errors }) {
       <h3 style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:20, color:'var(--clr-primary)', marginBottom:20 }}>Personal Information</h3>
       <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-          <Field label="First Name" required error={errors.firstName}><Inp value={data.firstName} onChange={e=>s('firstName',e.target.value)} placeholder="Jane" error={errors.firstName} /></Field>
-          <Field label="Last Name"  required error={errors.lastName}><Inp value={data.lastName}  onChange={e=>s('lastName',e.target.value)}  placeholder="Wanjiku" error={errors.lastName} /></Field>
+          <Field label="First Name" required error={errors.firstName}><Inp value={data.firstName} onChange={e=>s('firstName',e.target.value)} placeholder="Enter your first name" error={errors.firstName} /></Field>
+          <Field label="Last Name"  required error={errors.lastName}><Inp value={data.lastName}  onChange={e=>s('lastName',e.target.value)}  placeholder="Enter your last name" error={errors.lastName} /></Field>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-          <Field label="Email Address" required error={errors.email}><Inp type="email" value={data.email} onChange={e=>s('email',e.target.value)} placeholder="you@example.com" error={errors.email} /></Field>
-          <Field label="Phone Number" required error={errors.phone}><Inp type="tel" value={data.phone} onChange={e=>s('phone',e.target.value)} placeholder="+254 712 345 678" error={errors.phone} /></Field>
+          <Field label="Email Address" required error={errors.email}><Inp type="email" value={data.email} onChange={e=>s('email',e.target.value)} placeholder="name@example.com" error={errors.email} /></Field>
+          <Field label="Phone Number" required error={errors.phone}><Inp type="tel" value={data.phone} onChange={e=>s('phone',e.target.value)} placeholder="Include country code e.g. +254..." error={errors.phone} /></Field>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
           <Field label="Date of Birth"><Inp type="date" value={data.dateOfBirth} onChange={e=>s('dateOfBirth',e.target.value)} /></Field>
           <Field label="Gender">
             <Sel value={data.gender} onChange={e=>s('gender',e.target.value)} placeholder="Select gender" options={['Male','Female','Non-binary','Prefer not to say']} />
           </Field>
-          <Field label="Nationality"><Inp value={data.nationality} onChange={e=>s('nationality',e.target.value)} placeholder="e.g. Kenyan" /></Field>
+          <Field label="Nationality"><Inp value={data.nationality} onChange={e=>s('nationality',e.target.value)} placeholder="Enter your nationality" /></Field>
         </div>
-        <Field label="Address"><Inp value={data.address} onChange={e=>s('address',e.target.value)} placeholder="Street / P.O. Box" /></Field>
+        <Field label="Address"><Inp value={data.address} onChange={e=>s('address',e.target.value)} placeholder="Street address or P.O. Box" /></Field>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
-          <Field label="City" required error={errors.city}><Inp value={data.city} onChange={e=>s('city',e.target.value)} placeholder="Nairobi" error={errors.city} /></Field>
-          <Field label="Country" required error={errors.country}><Inp value={data.country} onChange={e=>s('country',e.target.value)} placeholder="Kenya" error={errors.country} /></Field>
-          <Field label="Postal Code"><Inp value={data.postalCode} onChange={e=>s('postalCode',e.target.value)} placeholder="00100" /></Field>
+          <Field label="City" required error={errors.city}><Inp value={data.city} onChange={e=>s('city',e.target.value)} placeholder="Enter your city" error={errors.city} /></Field>
+          <Field label="Country" required error={errors.country}><Inp value={data.country} onChange={e=>s('country',e.target.value)} placeholder="Enter your country" error={errors.country} /></Field>
+          <Field label="Postal Code"><Inp value={data.postalCode} onChange={e=>s('postalCode',e.target.value)} placeholder="Postal / ZIP code" /></Field>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-          <Field label="LinkedIn URL"><Inp value={data.linkedinUrl} onChange={e=>s('linkedinUrl',e.target.value)} placeholder="https://linkedin.com/in/yourname" /></Field>
-          <Field label="Portfolio / Website"><Inp value={data.portfolioUrl} onChange={e=>s('portfolioUrl',e.target.value)} placeholder="https://yoursite.com" /></Field>
+          <Field label="LinkedIn URL"><Inp value={data.linkedinUrl} onChange={e=>s('linkedinUrl',e.target.value)} placeholder="Paste your LinkedIn profile link" /></Field>
+          <Field label="Portfolio / Website"><Inp value={data.portfolioUrl} onChange={e=>s('portfolioUrl',e.target.value)} placeholder="Paste your portfolio or website link" /></Field>
         </div>
         <Field label="Professional Summary" hint="2–4 sentences about your experience and career goals">
           <textarea value={data.professionalSummary} onChange={e=>s('professionalSummary',e.target.value)}
-            placeholder="Experienced professional with 5+ years in…" rows={4}
+            placeholder="Write a short professional summary about yourself" rows={4}
             style={{ width:'100%',padding:'11px 14px',border:'1.5px solid var(--clr-border)',borderRadius:10,fontSize:14,fontFamily:'inherit',color:'var(--clr-text)',background:'#fff',outline:'none',resize:'vertical',lineHeight:1.6,boxSizing:'border-box' }}
           />
         </Field>
@@ -269,11 +269,11 @@ function Step2({ data, onChange }) {
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-              <Field label="Company / Organisation" required><Inp value={exp.company} onChange={e=>upd(i,'company',e.target.value)} placeholder="Safaricom PLC" /></Field>
-              <Field label="Job Title / Position" required><Inp value={exp.position} onChange={e=>upd(i,'position',e.target.value)} placeholder="Senior Designer" /></Field>
+              <Field label="Company / Organisation" required><Inp value={exp.company} onChange={e=>upd(i,'company',e.target.value)} placeholder="Enter company/organization name" /></Field>
+              <Field label="Job Title / Position" required><Inp value={exp.position} onChange={e=>upd(i,'position',e.target.value)} placeholder="Enter your job title" /></Field>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-              <Field label="Location"><Inp value={exp.location} onChange={e=>upd(i,'location',e.target.value)} placeholder="Nairobi, Kenya" /></Field>
+              <Field label="Location"><Inp value={exp.location} onChange={e=>upd(i,'location',e.target.value)} placeholder="City, Country" /></Field>
               <Field label="Employment Type">
                 <Sel value={exp.employmentType} onChange={e=>upd(i,'employmentType',e.target.value)} options={EMP_TYPES} />
               </Field>
@@ -290,7 +290,7 @@ function Step2({ data, onChange }) {
             </label>
             <Field label="Description / Key Achievements">
               <textarea value={exp.description} onChange={e=>upd(i,'description',e.target.value)}
-                placeholder="Describe your responsibilities and achievements…" rows={3}
+                placeholder="List your key responsibilities and achievements" rows={3}
                 style={{ width:'100%',padding:'11px 14px',border:'1.5px solid var(--clr-border)',borderRadius:10,fontSize:14,fontFamily:'inherit',resize:'vertical',lineHeight:1.6,boxSizing:'border-box',color:'var(--clr-text)',background:'#fff',outline:'none' }}
               />
             </Field>
@@ -333,18 +333,18 @@ function Step3({ education, languages, onEdu, onLang }) {
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-              <Field label="Institution" required><Inp value={edu.institution} onChange={e=>updEdu(i,'institution',e.target.value)} placeholder="University of Nairobi" /></Field>
+              <Field label="Institution" required><Inp value={edu.institution} onChange={e=>updEdu(i,'institution',e.target.value)} placeholder="Enter institution name" /></Field>
               <Field label="Degree">
                 <Sel value={edu.degree} onChange={e=>updEdu(i,'degree',e.target.value)} placeholder="Select degree" options={DEGREES} />
               </Field>
             </div>
-            <Field label="Field of Study"><Inp value={edu.fieldOfStudy} onChange={e=>updEdu(i,'fieldOfStudy',e.target.value)} placeholder="Computer Science" /></Field>
+            <Field label="Field of Study"><Inp value={edu.fieldOfStudy} onChange={e=>updEdu(i,'fieldOfStudy',e.target.value)} placeholder="Enter your field of study" /></Field>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
               <Field label="Start Year"><Inp type="month" value={edu.startDate} onChange={e=>updEdu(i,'startDate',e.target.value)} /></Field>
               <Field label="End Year"><Inp type="month" value={edu.endDate} onChange={e=>updEdu(i,'endDate',e.target.value)} /></Field>
-              <Field label="GPA / Grade" hint="e.g. 3.8 / 4.0"><Inp value={edu.gpa} onChange={e=>updEdu(i,'gpa',e.target.value)} placeholder="3.8" /></Field>
+              <Field label="GPA / Grade" hint="e.g. 3.8 / 4.0"><Inp value={edu.gpa} onChange={e=>updEdu(i,'gpa',e.target.value)} placeholder="Enter GPA or grade" /></Field>
             </div>
-            <Field label="Honors / Awards"><Inp value={edu.honors} onChange={e=>updEdu(i,'honors',e.target.value)} placeholder="First Class Honours, Dean's List…" /></Field>
+            <Field label="Honors / Awards"><Inp value={edu.honors} onChange={e=>updEdu(i,'honors',e.target.value)} placeholder="List any honors or awards" /></Field>
           </div>
         </div>
       ))}
@@ -365,7 +365,7 @@ function Step3({ education, languages, onEdu, onLang }) {
           {languages.map((l, i) => (
             <div key={i} style={{ background:'var(--clr-bg)', borderRadius:12, padding:16, border:'1px solid var(--clr-border-soft)', display:'flex', gap:10 }}>
               <div style={{ flex:1 }}>
-                <Inp value={l.language} onChange={e=>updLang(i,'language',e.target.value)} placeholder="English" style={{ marginBottom:8 }} />
+                <Inp value={l.language} onChange={e=>updLang(i,'language',e.target.value)} placeholder="Enter a language" style={{ marginBottom:8 }} />
                 <Sel value={l.proficiency} onChange={e=>updLang(i,'proficiency',e.target.value)} options={LANG_LEVELS} />
               </div>
               <button onClick={()=>remLang(i)} style={{ alignSelf:'flex-start',background:'var(--clr-red-pale)',border:'none',color:'var(--clr-red)',padding:'6px 10px',borderRadius:7,fontSize:13,cursor:'pointer',fontFamily:'inherit' }}>✕</button>
@@ -408,7 +408,7 @@ function Step4({ skills, certs, onSkills, onCerts }) {
 
       {/* Add skill input */}
       <div style={{ display:'flex', gap:10, marginBottom:16 }}>
-        <Inp value={skillInput} onChange={e=>setSkillInput(e.target.value)} placeholder="Type a skill and press Add…"
+        <Inp value={skillInput} onChange={e=>setSkillInput(e.target.value)} placeholder="Type a skill then press Add"
           onKeyDown={e=>{ if(e.key==='Enter'){e.preventDefault();addSkill();}}}
           style={{ flex:1 }}
         />
@@ -475,15 +475,15 @@ function Step4({ skills, certs, onSkills, onCerts }) {
             </div>
             <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
               <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
-                <Field label="Certificate Name"><Inp value={c.certName} onChange={e=>updCert(i,'certName',e.target.value)} placeholder="AWS Solutions Architect" /></Field>
-                <Field label="Issuing Organisation"><Inp value={c.issuingOrg} onChange={e=>updCert(i,'issuingOrg',e.target.value)} placeholder="Amazon Web Services" /></Field>
+                <Field label="Certificate Name"><Inp value={c.certName} onChange={e=>updCert(i,'certName',e.target.value)} placeholder="Enter certificate name" /></Field>
+                <Field label="Issuing Organisation"><Inp value={c.issuingOrg} onChange={e=>updCert(i,'issuingOrg',e.target.value)} placeholder="Enter issuing organisation" /></Field>
               </div>
               <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12 }}>
                 <Field label="Issue Date"><Inp type="month" value={c.issueDate} onChange={e=>updCert(i,'issueDate',e.target.value)} /></Field>
                 <Field label="Expiry Date" hint="Leave blank if no expiry"><Inp type="month" value={c.expiryDate} onChange={e=>updCert(i,'expiryDate',e.target.value)} /></Field>
-                <Field label="Credential ID"><Inp value={c.credentialId} onChange={e=>updCert(i,'credentialId',e.target.value)} placeholder="ABC-123" /></Field>
+                <Field label="Credential ID"><Inp value={c.credentialId} onChange={e=>updCert(i,'credentialId',e.target.value)} placeholder="Enter credential ID (optional)" /></Field>
               </div>
-              <Field label="Credential URL"><Inp value={c.credentialUrl} onChange={e=>updCert(i,'credentialUrl',e.target.value)} placeholder="https://verify.cert.com/…" /></Field>
+              <Field label="Credential URL"><Inp value={c.credentialUrl} onChange={e=>updCert(i,'credentialUrl',e.target.value)} placeholder="Paste verification link (optional)" /></Field>
             </div>
           </div>
         ))}
@@ -519,7 +519,7 @@ function Step5({ coverLetter, expectedSalary, startDate, onChange, personal, exp
       <div style={{ marginBottom:20 }}>
         <Field label="Cover Letter" hint="Introduce yourself and explain why you're a great fit for this role">
           <textarea value={coverLetter} onChange={e=>s('coverLetter',e.target.value)}
-            placeholder={`Dear Hiring Manager,\n\nI am writing to express my interest in the ${job?.title} position at HRMPEB…`}
+            placeholder={`Write your cover letter for the ${job?.title || 'role'} here`}
             rows={7}
             style={{ width:'100%',padding:'12px 14px',border:'1.5px solid var(--clr-border)',borderRadius:10,fontSize:14,fontFamily:'inherit',color:'var(--clr-text)',background:'#fff',outline:'none',resize:'vertical',lineHeight:1.7,boxSizing:'border-box' }}
           />
@@ -528,7 +528,7 @@ function Step5({ coverLetter, expectedSalary, startDate, onChange, personal, exp
 
       <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:24 }}>
         <Field label="Expected Salary (KES / month)" hint="Optional — enter your desired monthly salary">
-          <Inp type="number" value={expectedSalary} onChange={e=>s('expectedSalary',e.target.value)} placeholder="e.g. 120000" />
+          <Inp type="number" value={expectedSalary} onChange={e=>s('expectedSalary',e.target.value)} placeholder="Enter expected salary (numbers only)" />
         </Field>
         <Field label="Available Start Date">
           <Inp type="date" value={startDate} onChange={e=>s('startDate',e.target.value)} />
@@ -822,6 +822,7 @@ export default function ApplyNow() {
     </div>
   );
 }
+
 
 
 
