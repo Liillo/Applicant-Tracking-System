@@ -178,7 +178,7 @@ export default function AdminApplications() {
 
       {/* Table */}
       <div style={{ background:'#fff',borderRadius:16,boxShadow:'var(--shadow-md)',border:'1px solid var(--clr-border-soft)',overflow:'hidden' }}>
-        <div style={{ display:'grid',gridTemplateColumns:'40px 1.8fr 1.6fr 130px 110px 100px 80px',padding:'11px 20px',background:'var(--clr-bg)',borderBottom:'1px solid var(--clr-border-soft)',fontSize:11,fontWeight:700,color:'var(--clr-muted)',textTransform:'uppercase',letterSpacing:0.6 }}>
+        <div style={{ display:'grid',gridTemplateColumns:'40px 1.8fr 1.6fr 170px 110px 100px 80px',padding:'11px 20px',background:'var(--clr-bg)',borderBottom:'1px solid var(--clr-border-soft)',fontSize:11,fontWeight:700,color:'var(--clr-muted)',textTransform:'uppercase',letterSpacing:0.6 }}>
           <div><input type="checkbox" checked={filtered.length>0&&selected.size===filtered.length} onChange={selectAll} style={{ accentColor:'var(--clr-primary)',cursor:'pointer' }} /></div>
           <span>Applicant</span><span>Job</span><span>Status</span><span>Applied</span><span>Salary Ask</span><span style={{ textAlign:'right' }}>Action</span>
         </div>
@@ -195,7 +195,7 @@ export default function AdminApplications() {
           </div>
         ) : filtered.map((r,i) => (
           <div key={r.id}
-            style={{ display:'grid',gridTemplateColumns:'40px 1.8fr 1.6fr 130px 110px 100px 80px',padding:'13px 20px',borderBottom:i<filtered.length-1?'1px solid var(--clr-border-soft)':'none',alignItems:'center',transition:'background 0.15s',background:selected.has(r.id)?'var(--clr-primary-pale)':'transparent' }}
+            style={{ display:'grid',gridTemplateColumns:'40px 1.8fr 1.6fr 170px 110px 100px 80px',padding:'13px 20px',borderBottom:i<filtered.length-1?'1px solid var(--clr-border-soft)':'none',alignItems:'center',transition:'background 0.15s',background:selected.has(r.id)?'var(--clr-primary-pale)':'transparent' }}
             onMouseEnter={e=>{ if(!selected.has(r.id)) e.currentTarget.style.background='var(--clr-bg)'; }}
             onMouseLeave={e=>{ if(!selected.has(r.id)) e.currentTarget.style.background='transparent'; }}>
             <div><input type="checkbox" checked={selected.has(r.id)} onChange={()=>toggleSelect(r.id)} style={{ accentColor:'var(--clr-primary)',cursor:'pointer' }} /></div>
@@ -212,9 +212,9 @@ export default function AdminApplications() {
               <div style={{ fontSize:12,fontWeight:600,color:'var(--clr-text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{r.jobTitle}</div>
               <div style={{ fontSize:11,color:'var(--clr-muted)' }}>{r.jobLocation}</div>
             </div>
-            <div style={{ display:'flex',alignItems:'center',gap:5 }}>
+            <div style={{ display:'flex',alignItems:'center',gap:6,flexWrap:'wrap',rowGap:4,minWidth:0,maxWidth:170 }}>
               <span style={{ fontSize:14 }}>{STATUS_ICON[r.status]||'📋'}</span>
-              <Badge label={r.status} size="xs" />
+              <Badge label={r.status} size="xs" style={{ whiteSpace:'normal' }} />
             </div>
             <div style={{ fontSize:12,color:'var(--clr-muted)' }}>{timeAgo(r.createdAt)}</div>
             <div style={{ fontSize:12,fontWeight:600,color:r.expectedSalary?'var(--clr-green)':'var(--clr-muted)' }}>

@@ -675,7 +675,6 @@ export default function AdminApplicationDetail() {
             <InfoPair label="Application ID"  value={detail.id?.slice(0,10)+'…'} />
             <InfoPair label="Submitted"        value={formatDate(detail.createdAt)} />
             <InfoPair label="Last Updated"     value={detail.updatedAt?timeAgo(detail.updatedAt):'—'} />
-            <InfoPair label="CV File"          value={detail.cvFileName||'Not uploaded'} />
           </Card>
         </div>
       </div>

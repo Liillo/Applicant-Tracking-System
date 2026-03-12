@@ -9,7 +9,6 @@ import authRouter         from './src/routes/auth.js';
 import jobsRouter         from './src/routes/jobs.js';
 import applicationsRouter from './src/routes/applications.js';
 import departmentsRouter  from './src/routes/departments.js';
-import uploadRouter       from './src/routes/upload.js';
 
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -18,7 +17,6 @@ import 'dotenv/config';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const webDistPath = path.resolve(__dirname, '../web/dist');
-const uploadsPath = path.resolve(__dirname, 'src/uploads');
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 export const prisma = new PrismaClient({ adapter });
@@ -46,14 +44,11 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
-app.use('/uploads', express.static(uploadsPath)); // serve uploaded CVs
-
 // Routes
 app.use('/api/auth',         authRouter);
 app.use('/api/jobs',         jobsRouter);
 app.use('/api/applications', requireAuth, applicationsRouter);
 app.use('/api/departments',  departmentsRouter);
-app.use('/api/upload',       uploadRouter);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));

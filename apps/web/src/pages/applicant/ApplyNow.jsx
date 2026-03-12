@@ -1,14 +1,13 @@
 /**
  * HRMPEB ATS — Apply Now  (Module 4)
  * Multi-step application wizard:
- *   Step 0 — Choose method (upload PDF or fill manually)
  *   Step 1 — Personal Information
  *   Step 2 — Work Experience
  *   Step 3 — Education + Languages
  *   Step 4 — Skills + Certifications
  *   Step 5 — Cover Letter + Review & Submit
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
@@ -17,7 +16,6 @@ import toast from 'react-hot-toast';
 // ─── tiny helpers ────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { id: 0, label: 'Method',     icon: '📂' },
   { id: 1, label: 'Personal',   icon: '👤' },
   { id: 2, label: 'Experience', icon: '💼' },
   { id: 3, label: 'Education',  icon: '🎓' },
@@ -99,12 +97,12 @@ function Sel({ value, onChange, options, placeholder, error }) {
 // ─── Step Progress Bar ───────────────────────────────────────────────────────
 
 function StepBar({ current }) {
+  const activeIdx = STEPS.findIndex(s => s.id === current);
   return (
     <div style={{ display:'flex', alignItems:'center', gap:0, marginBottom:32 }}>
       {STEPS.map((s, i) => {
-        const done    = i < current;
-        const active  = i === current;
-        const future  = i > current;
+        const done    = i < activeIdx;
+        const active  = i === activeIdx;
         return (
           <React.Fragment key={s.id}>
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', position:'relative', flex: i>0&&i<STEPS.length-1?1:'unset' }}>
@@ -125,7 +123,7 @@ function StepBar({ current }) {
               </span>
             </div>
             {i < STEPS.length-1 && (
-              <div style={{ flex:1, height:2, background: i<current?'var(--clr-green)':'var(--clr-border)', margin:'0 4px', marginBottom:20, transition:'background 0.4s', minWidth:16 }} />
+              <div style={{ flex:1, height:2, background: i<activeIdx?'var(--clr-green)':'var(--clr-border)', margin:'0 4px', marginBottom:20, transition:'background 0.4s', minWidth:16 }} />
             )}
           </React.Fragment>
         );
@@ -181,31 +179,11 @@ function Step0({ job, onChoice }) {
       <div style={{ textAlign:'center', marginBottom:32 }}>
         <div style={{ fontSize:44, marginBottom:12 }}>📂</div>
         <h2 style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:24, color:'var(--clr-primary)', marginBottom:8 }}>How would you like to apply?</h2>
-        <p style={{ color:'var(--clr-muted)', fontSize:15, lineHeight:1.6 }}>Upload your CV for quick auto-fill, or fill in the form manually.</p>
+        <p style={{ color:'var(--clr-muted)', fontSize:15, lineHeight:1.6 }}>Fill in the form manually.</p>
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, marginBottom:24 }}>
 
-        {/* Upload CV */}
-        <div
-          onDragOver={e=>{e.preventDefault();setDragOver(true);}}
-          onDragLeave={()=>setDragOver(false)}
-          onDrop={e=>{e.preventDefault();setDragOver(false);const f=e.dataTransfer.files[0];if(f)handleFile(f);}}
-          onClick={()=>fileRef.current.click()}
-          style={{
-            border:`2px dashed ${dragOver?'var(--clr-gold)':'var(--clr-primary)'}`,
-            borderRadius:16, padding:32, textAlign:'center', cursor:'pointer',
-            background: dragOver?'var(--clr-gold-pale)':'var(--clr-primary-pale)',
-            transition:'all 0.2s',
-          }}>
-          <input ref={fileRef} type="file" accept=".pdf" style={{ display:'none' }} onChange={e=>handleFile(e.target.files[0])} />
-          <div style={{ fontSize:40, marginBottom:12 }}>📄</div>
-          <div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:17, color:'var(--clr-primary)', marginBottom:8 }}>Upload Your CV</div>
-          <p style={{ fontSize:13, color:'var(--clr-muted)', lineHeight:1.6, marginBottom:14 }}>Drag & drop or click to select a PDF. We'll auto-fill fields from your resume.</p>
-          <span style={{ background:'var(--clr-primary)', color:'#fff', padding:'8px 20px', borderRadius:8, fontSize:13, fontWeight:700 }}>Browse PDF →</span>
-          <div style={{ marginTop:12, fontSize:11, color:'var(--clr-muted)' }}>PDF only · Max 10MB</div>
-        </div>
-
-        {/* Manual */}
+        /* Manual */}
         <div onClick={()=>onChoice('manual')} style={{ border:'2px dashed var(--clr-border)', borderRadius:16, padding:32, textAlign:'center', cursor:'pointer', background:'#fff', transition:'all 0.2s' }}
           onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--clr-green)';e.currentTarget.style.background='var(--clr-green-pale)';}}
           onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--clr-border)';e.currentTarget.style.background='#fff';}}>
@@ -516,7 +494,7 @@ function Step4({ skills, certs, onSkills, onCerts }) {
 
 // ─── Step 5: Cover Letter + Review & Submit ─────────────────────────────────
 
-function Step5({ coverLetter, expectedSalary, startDate, onChange, personal, experience, education, skills, certs, languages, job, cvFileName }) {
+function Step5({ coverLetter, expectedSalary, startDate, onChange, personal, experience, education, skills, certs, languages, job }) {
   const s = (k,v) => onChange(k,v);
 
   const ReviewSection = ({ icon, title, count, children }) => (
@@ -577,16 +555,6 @@ function Step5({ coverLetter, expectedSalary, startDate, onChange, personal, exp
           )}
         </ReviewSection>
 
-        {cvFileName && (
-          <div style={{ background:'var(--clr-green-pale)',border:'1px solid rgba(0,135,83,0.2)',borderRadius:12,padding:14,marginBottom:12,display:'flex',alignItems:'center',gap:10 }}>
-            <span style={{ fontSize:20 }}>📄</span>
-            <div>
-              <div style={{ fontWeight:700,fontSize:13,color:'var(--clr-green)' }}>CV Uploaded</div>
-              <div style={{ fontSize:12,color:'var(--clr-muted)' }}>{cvFileName}</div>
-            </div>
-          </div>
-        )}
-
         <ReviewSection icon="💼" title="Work Experience" count={experience.length}>
           {experience.slice(0,2).map((e,i)=>(
             <div key={i} style={{ fontSize:13,color:'var(--clr-text-soft)',marginBottom:4 }}>
@@ -643,10 +611,9 @@ export default function ApplyNow() {
   const { user, profile, refreshProfile } = useAuth();
 
   const [job,     setJob]     = useState(null);
-  const [step,    setStep]    = useState(0);
+  const [step,    setStep]    = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors,  setErrors]  = useState({});
-  const [cvFileName, setCvFileName] = useState('');
 
   // Check if already applied
   const [alreadyApplied, setAlreadyApplied] = useState(false);
@@ -704,19 +671,6 @@ export default function ApplyNow() {
     };
     load();
   }, [jobId, user, profile]);
-
-  // CV parsed → pre-fill step 1 fields
-  const handleCVChoice = (method, filename='', parsed={}) => {
-    if (method==='cv' && filename) {
-      setCvFileName(filename);
-      if (parsed.email)      setPersonal(p=>({...p, email:parsed.email||p.email}));
-      if (parsed.phone)      setPersonal(p=>({...p, phone:parsed.phone||p.phone}));
-      if (parsed.linkedinUrl) setPersonal(p=>({...p, linkedinUrl:parsed.linkedinUrl||p.linkedinUrl}));
-      toast.success(`CV "${filename}" uploaded! Fields have been pre-filled.`);
-    }
-    setStep(1);
-  };
-
   // Validate step 1
   const validatePersonal = () => {
     const e = {};
@@ -738,7 +692,7 @@ export default function ApplyNow() {
     window.scrollTo({ top:0, behavior:'smooth' });
   };
 
-  const handleBack = () => { setStep(s=>s-1); window.scrollTo({ top:0, behavior:'smooth' }); };
+  const handleBack = () => { setStep(s=> Math.max(1, s-1)); window.scrollTo({ top:0, behavior:'smooth' }); };
 
   const handleSubmit = async () => {
     if (!coverLetter.trim()) { toast.error('Please write a cover letter'); return; }
@@ -767,7 +721,6 @@ export default function ApplyNow() {
         coverLetter,
         expectedSalary,
         availableStartDate: startDate,
-        cvFileName,
         workExperiences: experience,
         educations:      education,
         skills,
@@ -827,12 +780,11 @@ export default function ApplyNow() {
       {/* Main form area */}
       <div style={{ width:'100%',margin:0,padding:'36px 40px 80px' }}>
 
-        {/* Progress (only show steps 1-5 progress after step 0) */}
-        {step > 0 && <StepBar current={step} />}
+        {/* Progress */}
+        <StepBar current={step} />
 
         {/* Step cards */}
         <div style={{ background:'#fff',borderRadius:'var(--radius-xl)',padding:36,boxShadow:'var(--shadow-lg)',border:'1px solid var(--clr-border-soft)' }}>
-          {step===0 && <Step0 job={job} onChoice={handleCVChoice} />}
           {step===1 && <Step1 data={personal} onChange={setPersonal} errors={errors} />}
           {step===2 && <Step2 data={experience} onChange={setExperience} />}
           {step===3 && <Step3 education={education} languages={languages} onEdu={setEducation} onLang={setLanguages} />}
@@ -843,7 +795,7 @@ export default function ApplyNow() {
               onChange={(k,v)=>{ if(k==='coverLetter') setCoverLetter(v); else if(k==='expectedSalary') setExpectedSalary(v); else if(k==='startDate') setStartDate(v); }}
               personal={personal} experience={experience} education={education}
               skills={skills} certs={certs} languages={languages}
-              job={job} cvFileName={cvFileName}
+              job={job}
             />
           )}
         </div>
@@ -870,3 +822,13 @@ export default function ApplyNow() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+

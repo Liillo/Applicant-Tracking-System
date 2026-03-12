@@ -7,7 +7,7 @@ const router = Router();
 // POST /api/applications — authenticated applicant
 router.post('/', requireAuth, async (req, res) => {
   const { jobId, coverLetter, expectedSalary, availableStartDate,
-          cvFileName, workExperiences=[], educations=[],
+          workExperiences=[], educations=[],
           skills=[], certifications=[], languages=[] } = req.body;
 
   const existing = await prisma.application.findUnique({
@@ -18,7 +18,7 @@ router.post('/', requireAuth, async (req, res) => {
   const app = await prisma.application.create({
     data: {
       jobId, applicantId: req.user.id,
-      coverLetter, expectedSalary, availableStartDate, cvFileName,
+      coverLetter, expectedSalary, availableStartDate,
       statusHistory: { create: { status:'Submitted', changedBy:req.user.id, note:'Application submitted' } },
       workExperiences: { create: workExperiences },
       educations:      { create: educations      },
