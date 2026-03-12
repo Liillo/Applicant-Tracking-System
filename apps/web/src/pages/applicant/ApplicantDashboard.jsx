@@ -227,7 +227,7 @@ function ApplicationRow({ appData, onWithdraw }) {
                 <div style={{ fontSize:13,color:'var(--clr-text-soft)',marginTop:2 }}>
                   {nextInterview.interviewType} - {formatDate(nextInterview.scheduledDate)}
                   {nextInterview.meetingLink && (
-                    <> - <a href={nextInterview.meetingLink} target="_blank" rel="noreferrer" style={{ color:'var(--clr-primary)',fontWeight:700 }}>Join Meeting -></a></>
+                    <> - <a href={nextInterview.meetingLink} target="_blank" rel="noreferrer" style={{ color:'var(--clr-primary)',fontWeight:700 }}>Join Meeting {'->'}</a></>
                   )}
                 </div>
               </div>
@@ -283,7 +283,7 @@ function RecommendedJobCard({ job, deptName }) {
         </div>
       )}
       <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:10,borderTop:'1px solid var(--clr-border-soft)',fontSize:11,color:'var(--clr-muted)' }}>
-        <span style={{ color:hovered?'var(--clr-gold)':'var(--clr-primary)',fontWeight:700,fontSize:12,transition:'color 0.2s' }}>Apply -></span>
+        <span style={{ color:hovered?'var(--clr-gold)':'var(--clr-primary)',fontWeight:700,fontSize:12,transition:'color 0.2s' }}>Apply {'->'}</span>
       </div>
     </Link>
   );
@@ -450,7 +450,7 @@ export default function ApplicantDashboard() {
                 {`${ICON.edit} Edit Profile`}
               </button>
               <Link to="/jobs" style={{ padding:'10px 20px',borderRadius:10,background:'var(--clr-gold)',color:'var(--clr-primary)',fontWeight:800,fontSize:13,boxShadow:'0 4px 14px rgba(244,180,0,0.35)' }}>
-                Browse Jobs ->
+                Browse Jobs {'->'}
               </Link>
             </div>
           </div>
@@ -505,7 +505,7 @@ export default function ApplicantDashboard() {
                   <p style={{ color:'var(--clr-muted)',fontSize:14,marginBottom:20 }}>
                     {applications.length === 0 ? 'Browse open positions and hit Apply to get started!' : 'Try a different filter or search term.'}
                   </p>
-                  <Link to="/jobs" style={{ padding:'10px 24px',borderRadius:10,background:'var(--clr-primary)',color:'#fff',fontWeight:700,fontSize:14 }}>Browse Jobs -></Link>
+                  <Link to="/jobs" style={{ padding:'10px 24px',borderRadius:10,background:'var(--clr-primary)',color:'#fff',fontWeight:700,fontSize:14 }}>Browse Jobs {'->'}</Link>
                 </div>
               ) : filtered.map(appData => (
                 <ApplicationRow key={appData.app.id} appData={appData} onWithdraw={handleWithdraw} />
@@ -517,7 +517,7 @@ export default function ApplicantDashboard() {
               <div style={{ background:'#fff',borderRadius:20,padding:24,boxShadow:'var(--shadow-md)',border:'1px solid var(--clr-border-soft)' }}>
                 <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18 }}>
                   <h2 style={{ fontFamily:'var(--font-display)',fontWeight:800,fontSize:18,color:'var(--clr-primary)',margin:0 }}>{`${ICON.sparkles} Recommended for You`}</h2>
-                  <Link to="/jobs" style={{ fontSize:13,fontWeight:700,color:'var(--clr-primary)' }}>See all -></Link>
+                  <Link to="/jobs" style={{ fontSize:13,fontWeight:700,color:'var(--clr-primary)' }}>See all {'->'}</Link>
                 </div>
                 <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14 }}>
                   {recommended.map(({ job, deptName }) => (
@@ -631,7 +631,7 @@ export default function ApplicantDashboard() {
                 [['linkedinUrl','LinkedIn URL','url'], ['portfolioUrl','Portfolio URL','url']],
               ].map((row, ri) => (
                 <div key={ri} style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
-                  {row.map(([key, label, type]) => (
+                  {row.map(([key, label, inputType]) => (
                     <div key={key}>
                       <label style={{ display:'block',fontSize:12,fontWeight:600,color:'var(--clr-muted)',marginBottom:5,textTransform:'uppercase',letterSpacing:0.5 }}>{label}</label>
                       {key === 'gender' ? (
@@ -646,7 +646,7 @@ export default function ApplicantDashboard() {
                           <option value="Prefer not to say">Prefer not to say</option>
                         </select>
                       ) : (
-                        <input type={type} value={profileForm[key]||''} onChange={e => setProfileForm(p => ({...p,[key]:e.target.value}))}
+                        <input type={inputType} value={profileForm[key]||''} onChange={e => setProfileForm(p => ({...p,[key]:e.target.value}))}
                           style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--clr-border)',borderRadius:9,fontSize:13,fontFamily:'inherit',color:'var(--clr-text)',background:'var(--clr-bg)',outline:'none',boxSizing:'border-box' }}
                           onFocus={e=>e.target.style.borderColor='var(--clr-primary)'}
                           onBlur={e=>e.target.style.borderColor='var(--clr-border)'}
@@ -682,4 +682,3 @@ export default function ApplicantDashboard() {
     </div>
   );
 }
-
