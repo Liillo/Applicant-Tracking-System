@@ -15,7 +15,7 @@ This specific ATS was designed with HRMPEB in mind.
 - Node.js
 - JavaScript
 - Prisma ORM
-- SQL Database
+- MySQL/MariaDB via Wampserver
 - HTML, CSS
 
 ## Installation
@@ -28,13 +28,36 @@ git clone https://github.com/Liillo/Applicant-Tracking-System.git
 
 npm install
 
-3. Configure environment variables
+3. Configure Wampserver database
 
-Create a .env file.
+Start Wampserver, open phpMyAdmin, and create a database named `hrmpeb_ats`.
 
-4. Run the project
+4. Configure environment variables
 
+Create `apps/api/.env`:
+
+```env
+DATABASE_URL="mysql://root:@localhost:3306/hrmpeb_ats"
+PORT=3001
+JWT_SECRET="change-this-secret"
+JWT_EXPIRES_IN="7d"
+FRONTEND_URL="http://localhost:5173"
+```
+
+If your Wampserver MySQL user has a password, put it after `root:` in `DATABASE_URL`.
+
+5. Create the database tables
+
+```bash
+npm exec prisma db push --workspace api
+npm run seed:api
+```
+
+6. Run the project
+
+```bash
 npm run dev
+```
 
 ## Author
 Lilian Kazuri

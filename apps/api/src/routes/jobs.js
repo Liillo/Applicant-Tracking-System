@@ -54,9 +54,9 @@ router.get('/', async (req, res) => {
   if (level) where.experienceLevel = level;
   if (search) {
     where.OR = [
-      { title: { contains: search, mode: 'insensitive' } },
-      { description: { contains: search, mode: 'insensitive' } },
-      { skillsRequired: { contains: search, mode: 'insensitive' } },
+      { title: { contains: search } },
+      { description: { contains: search } },
+      { skillsRequired: { contains: search } },
     ];
   }
 

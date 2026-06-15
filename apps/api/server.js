@@ -9,17 +9,13 @@ import authRouter         from './src/routes/auth.js';
 import jobsRouter         from './src/routes/jobs.js';
 import applicationsRouter from './src/routes/applications.js';
 import departmentsRouter  from './src/routes/departments.js';
-
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { prisma } from './src/db.js';
 import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const webDistPath = path.resolve(__dirname, '../web/dist');
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-export const prisma = new PrismaClient({ adapter });
 dotenv.config();
 
 const app  = express();

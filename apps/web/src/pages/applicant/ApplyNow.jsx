@@ -183,7 +183,7 @@ function Step0({ job, onChoice }) {
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, marginBottom:24 }}>
 
-        /* Manual */}
+        {/* Manual */}
         <div onClick={()=>onChoice('manual')} style={{ border:'2px dashed var(--clr-border)', borderRadius:16, padding:32, textAlign:'center', cursor:'pointer', background:'#fff', transition:'all 0.2s' }}
           onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--clr-green)';e.currentTarget.style.background='var(--clr-green-pale)';}}
           onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--clr-border)';e.currentTarget.style.background='#fff';}}>

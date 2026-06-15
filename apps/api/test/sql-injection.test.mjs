@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { app } from '../server.js';
+import { prisma } from '../src/db.js';
 
 let server;
 let baseUrl;
@@ -21,10 +22,13 @@ test.before(async () => {
 });
 
 test.after(async () => {
-  if (!server) return;
-  await new Promise((resolve, reject) => {
-    server.close((err) => (err ? reject(err) : resolve()));
-  });
+  if (server) {
+    await new Promise((resolve, reject) => {
+      server.close((err) => (err ? reject(err) : resolve()));
+    });
+  }
+
+  await prisma.$disconnect();
 });
 
 test('health endpoint stays available', async () => {

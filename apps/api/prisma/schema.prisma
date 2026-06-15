@@ -3,14 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  role         String   @default("applicant")
+  id           String   @id @default(cuid()) @db.VarChar(36)
+  email        String   @unique @db.VarChar(191)
+  passwordHash String   @db.VarChar(255)
+  role         String   @default("applicant") @db.VarChar(50)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -19,8 +19,8 @@ model User {
 }
 
 model ApplicantProfile {
-  id                  String   @id @default(cuid())
-  userId              String   @unique
+  id                  String   @id @default(cuid()) @db.VarChar(36)
+  userId              String   @unique @db.VarChar(36)
   firstName           String?
   lastName            String?
   phone               String?
@@ -41,8 +41,8 @@ model ApplicantProfile {
 }
 
 model Department {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String   @id @default(cuid()) @db.VarChar(36)
+  name        String   @unique @db.VarChar(191)
   description String?
   createdAt   DateTime @default(now())
 
@@ -50,48 +50,55 @@ model Department {
 }
 
 model Job {
-  id               String   @id @default(cuid())
-  title            String
-  departmentId     String
-  location         String
-  jobType          String
-  experienceLevel  String
-  salaryMin        Float?
-  salaryMax        Float?
-  salaryCurrency   String   @default("KES")
-  salaryPeriod     String   @default("Monthly")
+  id              String   @id @default(cuid()) @db.VarChar(36)
+  title           String
+  departmentId    String   @db.VarChar(36)
+  location        String
+  jobType         String
+  experienceLevel String
+
+  salaryMin      Float?
+  salaryMax      Float?
+  salaryCurrency String @default("KES")
+  salaryPeriod   String @default("Monthly")
+
   description      String
   responsibilities String?
   requirements     String?
   benefits         String?
   skillsRequired   String?
-  status           String   @default("Open")
-  slots            Int      @default(1)
-  deadline         String?
-  views            Int      @default(0)
-  createdBy        String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+
+  status    String @default("Open")
+  slots     Int    @default(1)
+  deadline  String?
+  views     Int    @default(0)
+  createdBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   department   Department    @relation(fields: [departmentId], references: [id])
   applications Application[]
 }
 
 model Application {
-  id                 String   @id @default(cuid())
-  jobId              String
-  applicantId        String
-  status             String   @default("Submitted")
+  id          String @id @default(cuid()) @db.VarChar(36)
+  jobId       String @db.VarChar(36)
+  applicantId String @db.VarChar(36)
+
+  status             String @default("Submitted")
   coverLetter        String?
   expectedSalary     String?
   availableStartDate String?
   cvFileName         String?
   cvFilePath         String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
 
-  job            Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  applicant      User             @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicant User @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
   workExperiences WorkExperience[]
   educations      Education[]
   skills          Skill[]
@@ -105,8 +112,9 @@ model Application {
 }
 
 model WorkExperience {
-  id             String  @id @default(cuid())
-  applicationId  String
+  id            String @id @default(cuid()) @db.VarChar(36)
+  applicationId String @db.VarChar(36)
+
   company        String
   position       String
   location       String?
@@ -120,32 +128,35 @@ model WorkExperience {
 }
 
 model Education {
-  id            String  @id @default(cuid())
-  applicationId String
-  institution   String
-  degree        String?
-  fieldOfStudy  String?
-  startDate     String?
-  endDate       String?
-  gpa           String?
-  honors        String?
+  id            String @id @default(cuid()) @db.VarChar(36)
+  applicationId String @db.VarChar(36)
+
+  institution  String
+  degree       String?
+  fieldOfStudy String?
+  startDate    String?
+  endDate      String?
+  gpa          String?
+  honors       String?
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model Skill {
-  id               String @id @default(cuid())
-  applicationId    String
-  skillName        String
-  proficiency      String?
+  id            String @id @default(cuid()) @db.VarChar(36)
+  applicationId String @db.VarChar(36)
+
+  skillName         String
+  proficiency       String?
   yearsOfExperience Int?
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model Certification {
-  id            String  @id @default(cuid())
-  applicationId String
+  id            String @id @default(cuid()) @db.VarChar(36)
+  applicationId String @db.VarChar(36)
+
   certName      String
   issuingOrg    String?
   issueDate     String?
@@ -157,39 +168,44 @@ model Certification {
 }
 
 model Language {
-  id            String @id @default(cuid())
-  applicationId String
-  language      String
-  proficiency   String?
+  id            String @id @default(cuid()) @db.VarChar(36)
+  applicationId String @db.VarChar(36)
+
+  language    String
+  proficiency String?
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model AppNote {
-  id            String   @id @default(cuid())
-  applicationId String
-  adminId       String
-  note          String
-  isPrivate     Boolean  @default(true)
-  createdAt     DateTime @default(now())
+  id            String @id @default(cuid()) @db.VarChar(36)
+  applicationId String @db.VarChar(36)
+
+  adminId   String
+  note      String
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model StatusHistory {
-  id            String   @id @default(cuid())
-  applicationId String
-  status        String
-  changedBy     String
-  note          String?
-  createdAt     DateTime @default(now())
+  id            String @id @default(cuid()) @db.VarChar(36)
+  applicationId String @db.VarChar(36)
+
+  status    String
+  changedBy String
+  note      String?
+
+  createdAt DateTime @default(now())
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model Interview {
-  id              String   @id @default(cuid())
-  applicationId   String
+  id            String @id @default(cuid()) @db.VarChar(36)
+  applicationId String @db.VarChar(36)
+
   scheduledBy     String
   interviewType   String
   scheduledDate   String
